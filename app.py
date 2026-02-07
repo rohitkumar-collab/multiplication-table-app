@@ -44,32 +44,37 @@ def update_analytics(number):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    table = None
-    num = None
-    start_range = 1
-    end_range = 10
-    
-    if request.method == "POST":
-        num = int(request.form.get("number"))
-        start_range = int(request.form.get("start_range", 1))
-        end_range = int(request.form.get("end_range", 10))
+    try:
+        table = None
+        num = None
+        start_range = 1
+        end_range = 10
         
-        # Validate ranges
-        if start_range < 1:
-            start_range = 1
-        if end_range < start_range:
-            end_range = start_range + 10
-        if end_range > 100:
-            end_range = 100
+        if request.method == "POST":
+            num = int(request.form.get("number", 1))
+            start_range = int(request.form.get("start_range", 1))
+            end_range = int(request.form.get("end_range", 10))
+            
+            # Validate ranges
+            if start_range < 1:
+                start_range = 1
+            if end_range < start_range:
+                end_range = start_range + 10
+            if end_range > 100:
+                end_range = 100
+            
+            table = [(num, i, num * i) for i in range(start_range, end_range + 1)]
+            update_analytics(num)
         
-        table = [(num, i, num * i) for i in range(start_range, end_range + 1)]
-        update_analytics(num)
-    
-    analytics = load_analytics()
-    top_tables = sorted(analytics.items(), key=lambda x: x[1], reverse=True)[:5]
-    
-    return render_template("index.html", table=table, num=num, start_range=start_range, 
-                         end_range=end_range, top_tables=top_tables)
+        analytics = load_analytics()
+        top_tables = sorted(analytics.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        return render_template("index.html", table=table, num=num, start_range=start_range, 
+                             end_range=end_range, top_tables=top_tables)
+    except Exception as e:
+        print(f"Error in index route: {e}")
+        return render_template("index.html", table=None, num=None, start_range=1, 
+                             end_range=10, top_tables=[])
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
@@ -161,3 +166,6 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+# Expose app for gunicorn
+wsgi_app = app
