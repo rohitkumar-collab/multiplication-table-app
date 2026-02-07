@@ -6,32 +6,146 @@
     <title>Multiplication Table</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #ffffff;
+            --bg-dark: #1a1a1a;
+            --text-light: #000000;
+            --text-dark: #ffffff;
+            --card-light: #f8f9fa;
+            --card-dark: #2d2d2d;
+            --border-light: #dee2e6;
+            --border-dark: #444444;
+        }
+
+        body.light-mode {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .light-mode .card {
+            background-color: var(--card-light);
+            border-color: var(--border-light);
+        }
+
+        .dark-mode .card {
+            background-color: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .light-mode .form-control,
+        .light-mode .form-label {
+            color: var(--text-light);
+        }
+
+        .dark-mode .form-control {
+            background-color: #333333;
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .dark-mode .form-label {
+            color: var(--text-dark);
+        }
+
+        .multiplication-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .table-cell {
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: transform 0.2s;
+            cursor: default;
+        }
+
+        .light-mode .table-cell {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: var(--text-light);
+        }
+
+        .dark-mode .table-cell {
+            background-color: #1e3a5f;
+            border: 1px solid #2d5a8c;
+            color: var(--text-dark);
+        }
+
+        .table-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body class="light-mode bg-light">
+    <button class="btn btn-outline-secondary btn-sm theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+
     <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h1 class="text-center mb-4">Multiplication Table Generator</h1>
                         <form method="POST">
                             <div class="mb-3">
                                 <label for="number" class="form-label">Enter a number:</label>
-                                <input type="number" id="number" name="number" class="form-control" required>
+                                <input type="number" id="number" name="number" class="form-control" required value="{{ num or '' }}">
                             </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_range" class="form-label">Start Range:</label>
+                                    <input type="number" id="start_range" name="start_range" class="form-control" min="1" max="100" value="{{ start_range or 1 }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_range" class="form-label">End Range:</label>
+                                    <input type="number" id="end_range" name="end_range" class="form-control" min="1" max="100" value="{{ end_range or 10 }}">
+                                </div>
+                            </div>
+
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary">Generate Table</button>
                             </div>
                         </form>
 
                         {% if table %}
-                            <div class="mt-4">
-                                <h2 class="text-center">Multiplication Table:</h2>
-                                <ul class="list-group">
-                                    {% for num, i, result in table %}
-                                        <li class="list-group-item">{{ num }} x {{ i }} = {{ result }}</li>
+                            <div class="mt-5">
+                                <h2 class="text-center mb-4">Multiplication Table for {{ num }} ({{ start_range }}-{{ end_range }})</h2>
+                                
+                                <!-- Grid View -->
+                                <div class="multiplication-table">
+                                    {% for num_val, i, result in table %}
+                                        <div class="table-cell">
+                                            <div style="font-size: 0.85rem; opacity: 0.8;">{{ num_val }} × {{ i }}</div>
+                                            <div style="font-size: 1.2rem; font-weight: bold; margin-top: 5px;">{{ result }}</div>
+                                        </div>
                                     {% endfor %}
-                                </ul>
+                                </div>
                             </div>
                         {% endif %}
                     </div>
@@ -42,5 +156,33 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Load theme preference from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light-mode';
+        body.className = savedTheme + ' bg-light';
+        if (savedTheme === 'dark-mode') {
+            body.classList.remove('bg-light');
+            body.classList.add('bg-dark');
+            themeToggle.textContent = '☀️ Light Mode';
+        }
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode', 'bg-light');
+                body.classList.add('dark-mode', 'bg-dark');
+                localStorage.setItem('theme', 'dark-mode');
+                themeToggle.textContent = '☀️ Light Mode';
+            } else {
+                body.classList.remove('dark-mode', 'bg-dark');
+                body.classList.add('light-mode', 'bg-light');
+                localStorage.setItem('theme', 'light-mode');
+                themeToggle.textContent = '🌙 Dark Mode';
+            }
+        });
+    </script>
 </body>
 </html>
