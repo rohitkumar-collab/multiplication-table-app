@@ -17,15 +17,21 @@ ANALYTICS_FILE = "analytics.json"
 
 def load_analytics():
     """Load analytics data from file"""
-    if os.path.exists(ANALYTICS_FILE):
-        with open(ANALYTICS_FILE, "r") as f:
-            return json.load(f)
+    try:
+        if os.path.exists(ANALYTICS_FILE):
+            with open(ANALYTICS_FILE, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading analytics: {e}")
     return {}
 
 def save_analytics(data):
     """Save analytics data to file"""
-    with open(ANALYTICS_FILE, "w") as f:
-        json.dump(data, f)
+    try:
+        with open(ANALYTICS_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"Error saving analytics: {e}")
 
 def update_analytics(number):
     """Update analytics when a table is generated"""
@@ -152,4 +158,6 @@ def analytics():
 
 if __name__ == "__main__":
     # For production, debug is set to False, and host is set to '0.0.0.0' to allow external access
-    app.run(debug=False, host="0.0.0.0")
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
