@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 import random
 import json
 import os
+import sys
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -10,10 +11,19 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
 
+# Setup logging
+import logging
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
 app = Flask(__name__)
 
 # File to store analytics
 ANALYTICS_FILE = "analytics.json"
+
+# Health check route
+@app.route("/health", methods=["GET"])
+def health():
+    return {"status": "ok"}, 200
 
 def load_analytics():
     """Load analytics data from file"""
