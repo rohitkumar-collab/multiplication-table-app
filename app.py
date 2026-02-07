@@ -171,11 +171,12 @@ def analytics():
     
     return render_template("analytics.html", top_tables=top_tables, total_queries=total_queries)
 
+# Expose app for gunicorn
+wsgi_app = app
+
 if __name__ == "__main__":
     # For production, debug is set to False, and host is set to '0.0.0.0' to allow external access
     import os
     port = int(os.environ.get("PORT", 5000))
+    print(f"Starting Flask app on port {port}")
     app.run(debug=False, host="0.0.0.0", port=port)
-
-# Expose app for gunicorn
-wsgi_app = app
