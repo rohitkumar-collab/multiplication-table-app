@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Multiplication Table App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-light: #ffffff;
+            --bg-dark: #1a1a1a;
+            --text-light: #000000;
+            --text-dark: #ffffff;
+            --card-light: #f8f9fa;
+            --card-dark: #2d2d2d;
+            --border-light: #dee2e6;
+            --border-dark: #444444;
+        }
+
+        body.light-mode {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .light-mode .card {
+            background-color: var(--card-light);
+            border-color: var(--border-light);
+        }
+
+        .dark-mode .card {
+            background-color: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .light-mode .stat-card {
+            background-color: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .dark-mode .stat-card {
+            background-color: #1e3a5f;
+            color: #66b3ff;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .light-mode table {
+            color: var(--text-light);
+        }
+
+        .dark-mode table {
+            color: var(--text-dark);
+        }
+
+        .dark-mode .table {
+            border-color: var(--border-dark);
+        }
+
+        .dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #2d2d2d;
+        }
+
+        .dark-mode .table thead {
+            background-color: #1e3a5f;
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body class="light-mode bg-light">
+    <button class="btn btn-outline-secondary btn-sm theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h1 class="text-center mb-4">📊 App Analytics</h1>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div>Total Queries</div>
+                                    <div style="font-size: 2.5rem; margin-top: 10px;">{{ total_queries }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div>Unique Tables</div>
+                                    <div style="font-size: 2.5rem; margin-top: 10px;">{{ top_tables|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="mb-4">Top 10 Most Searched Multiplication Tables</h2>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Number</th>
+                                        <th>Times Searched</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for number, count in top_tables %}
+                                        <tr>
+                                            <td><strong>{{ loop.index }}</strong></td>
+                                            <td><strong style="font-size: 1.2rem;">{{ number }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ "%.1f" | format((count / total_queries * 100) if total_queries > 0 else 0) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="mb-4">Search Distribution Chart</h2>
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="text-center mb-4">
+                    <a href="/" class="btn btn-primary btn-lg">Back to Generator</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Load theme preference from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light-mode';
+        body.className = savedTheme + ' bg-light';
+        if (savedTheme === 'dark-mode') {
+            body.classList.remove('bg-light');
+            body.classList.add('bg-dark');
+            themeToggle.textContent = '☀️ Light Mode';
+        }
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode', 'bg-light');
+                body.classList.add('dark-mode', 'bg-dark');
+                localStorage.setItem('theme', 'dark-mode');
+                themeToggle.textContent = '☀️ Light Mode';
+            } else {
+                body.classList.remove('dark-mode', 'bg-dark');
+                body.classList.add('light-mode', 'bg-light');
+                localStorage.setItem('theme', 'light-mode');
+                themeToggle.textContent = '🌙 Dark Mode';
+            }
+        });
+
+        // Chart data
+        const chartData = {
+            {% for number, count in top_tables %}
+                "{{ number }}": {{ count }},
+            {% endfor %}
+        };
+
+        const labels = Object.keys(chartData);
+        const data = Object.values(chartData);
+
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels.map(label => `Table ${label}`),
+                datasets: [{
+                    label: 'Number of Searches',
+                    data: data,
+                    backgroundColor: 'rgba(31, 119, 210, 0.8)',
+                    borderColor: 'rgba(31, 119, 210, 1)',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '{{ "rgba(0,0,0,0.8)" if "light" in request.cookies.get("theme", "light") else "rgba(255,255,255,0.8)" }}'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '{{ "rgba(0,0,0,0.8)" if "light" in request.cookies.get("theme", "light") else "rgba(255,255,255,0.8)" }}'
+                        },
+                        grid: {
+                            color: '{{ "rgba(0,0,0,0.1)" if "light" in request.cookies.get("theme", "light") else "rgba(255,255,255,0.1)" }}'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '{{ "rgba(0,0,0,0.8)" if "light" in request.cookies.get("theme", "light") else "rgba(255,255,255,0.8)" }}'
+                        },
+                        grid: {
+                            color: '{{ "rgba(0,0,0,0.1)" if "light" in request.cookies.get("theme", "light") else "rgba(255,255,255,0.1)" }}'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

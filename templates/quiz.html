@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplication Quiz</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #ffffff;
+            --bg-dark: #1a1a1a;
+            --text-light: #000000;
+            --text-dark: #ffffff;
+            --card-light: #f8f9fa;
+            --card-dark: #2d2d2d;
+            --border-light: #dee2e6;
+            --border-dark: #444444;
+        }
+
+        body.light-mode {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .light-mode .card {
+            background-color: var(--card-light);
+            border-color: var(--border-light);
+        }
+
+        .dark-mode .card {
+            background-color: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .light-mode .form-control,
+        .light-mode .form-label {
+            color: var(--text-light);
+        }
+
+        .dark-mode .form-control {
+            background-color: #333333;
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .dark-mode .form-label {
+            color: var(--text-dark);
+        }
+
+        .question-card {
+            font-size: 2rem;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .dark-mode .question-card {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d3561 100%);
+        }
+
+        .score-board {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            background-color: #d4edda;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .score-board {
+            background-color: #1e4620;
+            color: #28a745;
+        }
+
+        .feedback {
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .dark-mode .correct {
+            background-color: #1e4620;
+            color: #28a745;
+        }
+
+        .wrong {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .dark-mode .wrong {
+            background-color: #5a2a2a;
+            color: #ff6b6b;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+        }
+    </style>
+</head>
+<body class="light-mode bg-light">
+    <button class="btn btn-outline-secondary btn-sm theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="text-center mb-4">🎮 Multiplication Quiz</h1>
+                        
+                        <div class="score-board">
+                            <span>Score: </span><span id="score">0</span> / <span id="total">10</span>
+                        </div>
+
+                        <div id="quizContainer">
+                            <div class="question-card">
+                                <span id="num1">5</span> × <span id="num2">7</span> = ?
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="answer" class="form-label">Your Answer:</label>
+                                <input type="number" id="answer" class="form-control form-control-lg" placeholder="Enter your answer" autofocus>
+                            </div>
+
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-lg" id="submitBtn">Submit Answer</button>
+                            </div>
+
+                            <div id="feedback"></div>
+                        </div>
+
+                        <div id="resultContainer" style="display: none;">
+                            <div class="text-center">
+                                <h2 id="finalScore"></h2>
+                                <p id="resultMessage" style="font-size: 1.2rem; margin: 20px 0;"></p>
+                                <button class="btn btn-primary btn-lg" onclick="location.reload()">Try Again</button>
+                                <a href="/" class="btn btn-secondary btn-lg">Back to Generator</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let score = 0;
+        let total = 10;
+        let currentQuestion = 0;
+        let currentAnswer = null;
+
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Load theme preference from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light-mode';
+        body.className = savedTheme + ' bg-light';
+        if (savedTheme === 'dark-mode') {
+            body.classList.remove('bg-light');
+            body.classList.add('bg-dark');
+            themeToggle.textContent = '☀️ Light Mode';
+        }
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode', 'bg-light');
+                body.classList.add('dark-mode', 'bg-dark');
+                localStorage.setItem('theme', 'dark-mode');
+                themeToggle.textContent = '☀️ Light Mode';
+            } else {
+                body.classList.remove('dark-mode', 'bg-dark');
+                body.classList.add('light-mode', 'bg-light');
+                localStorage.setItem('theme', 'light-mode');
+                themeToggle.textContent = '🌙 Dark Mode';
+            }
+        });
+
+        async function loadQuestion() {
+            const response = await fetch('/api/quiz-question');
+            const data = await response.json();
+            currentAnswer = data.answer;
+            document.getElementById('num1').textContent = data.num1;
+            document.getElementById('num2').textContent = data.num2;
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('answer').focus();
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const userAnswer = parseInt(document.getElementById('answer').value);
+            const feedbackDiv = document.getElementById('feedback');
+
+            if (isNaN(userAnswer)) {
+                feedbackDiv.innerHTML = '<div class="feedback wrong">Please enter a valid number!</div>';
+                return;
+            }
+
+            currentQuestion++;
+
+            if (userAnswer === currentAnswer) {
+                score++;
+                feedbackDiv.innerHTML = '<div class="feedback correct">✅ Correct! Well done!</div>';
+            } else {
+                feedbackDiv.innerHTML = `<div class="feedback wrong">❌ Wrong! The correct answer is ${currentAnswer}</div>`;
+            }
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('total').textContent = total;
+
+            if (currentQuestion >= total) {
+                setTimeout(showResults, 2000);
+            } else {
+                setTimeout(loadQuestion, 2000);
+            }
+        });
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            const percentage = Math.round((score / total) * 100);
+            document.getElementById('finalScore').textContent = `Final Score: ${score}/${total} (${percentage}%)`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = '🌟 Perfect! You are a multiplication master!';
+            } else if (percentage >= 80) {
+                message = '🎉 Excellent! Great job!';
+            } else if (percentage >= 60) {
+                message = '👍 Good effort! Keep practicing!';
+            } else {
+                message = '💪 Keep practicing! You\'ll improve!';
+            }
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('submitBtn').click();
+            }
+        });
+
+        // Load first question
+        loadQuestion();
+    </script>
+</body>
+</html>

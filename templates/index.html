@@ -100,7 +100,52 @@
         .btn-sm {
             padding: 0.5rem 1rem;
         }
-    </style>
+
+        .nav-tabs .nav-link {
+            color: var(--text-light);
+        }
+
+        .dark-mode .nav-tabs .nav-link {
+            color: var(--text-dark);
+        }
+
+        .dark-mode .nav-tabs {
+            border-color: var(--border-dark);
+        }
+
+        .dark-mode .nav-tabs .nav-link.active {
+            background-color: var(--card-dark);
+            border-color: var(--border-dark) var(--border-dark) var(--card-dark);
+            color: var(--text-dark);
+        }
+
+        .top-tables {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .dark-mode .top-tables {
+            background-color: #333333;
+        }
+
+        .top-tables h5 {
+            margin-bottom: 15px;
+        }
+
+        .top-table-item {
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .dark-mode .top-table-item {
+            background-color: #444444;
+        }
 </head>
 <body class="light-mode bg-light">
     <button class="btn btn-outline-secondary btn-sm theme-toggle" id="themeToggle">🌙 Dark Mode</button>
@@ -111,6 +156,19 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h1 class="text-center mb-4">Multiplication Table Generator</h1>
+                        
+                                <!-- Navigation Tabs -->
+                        <ul class="nav nav-tabs mb-4" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#generator" data-bs-toggle="tab">Generator</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/quiz">Quiz Mode 🎮</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/analytics">Analytics 📊</a>
+                            </li>
+                        </ul>
                         <form method="POST">
                             <div class="mb-3">
                                 <label for="number" class="form-label">Enter a number:</label>
@@ -146,6 +204,29 @@
                                         </div>
                                     {% endfor %}
                                 </div>
+
+                                <!-- Download PDF Button -->
+                                <div class="text-center mt-4">
+                                    <form method="POST" action="/download-pdf" style="display: inline;">
+                                        <input type="hidden" name="number" value="{{ num }}">
+                                        <input type="hidden" name="start_range" value="{{ start_range }}">
+                                        <input type="hidden" name="end_range" value="{{ end_range }}">
+                                        <button type="submit" class="btn btn-success">📥 Download as PDF</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Top Tables Section -->
+                        {% if top_tables %}
+                            <div class="top-tables">
+                                <h5>📈 Most Searched Tables</h5>
+                                {% for number, count in top_tables %}
+                                    <div class="top-table-item">
+                                        <span><strong>Table {{ number }}</strong></span>
+                                        <span class="badge bg-primary">{{ count }} searches</span>
+                                    </div>
+                                {% endfor %}
                             </div>
                         {% endif %}
                     </div>
